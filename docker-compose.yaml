@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+  unifi-db:
+    image: docker.io/mongo:${MONGO_DB_CONTROLLER_IMAGE_TAG}
+    container_name: unifi-db
+    env_file:
+      - .env
+    volumes:
+      - ${UNIFI_BASE_FOLDER}/mongo/db:/data/db
+      - ${UNIFI_BASE_FOLDER}/mongo/configdb:/data/configdb
+      - ${UNIFI_BASE_FOLDER}/init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh:ro
+    restart: unless-stopped
+
+  unifi:
+    image: lscr.io/linuxserver/unifi-network-application:${UNIFI_CONTROLLER_IMAGE_TAG}
+    container_name: unifi
+    depends_on:
+      - unifi-db
+    env_file:
+      - .env
+    volumes:
+      - ${UNIFI_BASE_FOLDER}/config:/config
+    ports:
+      - 8443:8443
+      - 3478:3478/udp
+      - 10001:10001/udp
+      - 8080:8080
+    restart: unless-stopped
